@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IQOO Mate – privacy router demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&family=Fragment+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0F1420; --paper:#E9ECF1; --panel:#FFFFFF; --muted:#566074; --line:#D2D7E0;
+  --blue:#2358F5; --blue-soft:#DCE6FF; --out:#D92D3A; --out-soft:#FBE3E5; --amber:#8A5A00; --amber-soft:#FFF1D0;
+  --sans:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"Fragment Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:8px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.wrap{max-width:1140px;margin:0 auto;padding:24px 20px 48px}
+header.top{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between;margin-bottom:24px}
+header.top h1{margin:0;font-size:clamp(26px,4vw,40px);line-height:1.1;letter-spacing:-.02em;font-weight:700;max-width:18ch}
+header.top p{margin:8px 0 0;color:var(--muted);max-width:56ch}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1.5px solid var(--ink);background:var(--panel);border-radius:999px;padding:8px 16px;cursor:pointer;font-weight:500}
+.btn:hover{background:var(--ink);color:#fff}
+.btn[aria-pressed="true"]{background:var(--ink);color:#fff}
+.grid{display:grid;gap:28px;grid-template-columns:minmax(0,380px) minmax(0,1fr);align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+/* phone */
+.phone{background:var(--ink);border-radius:40px;padding:10px;width:100%;max-width:380px;margin:0 auto}
+.screen{background:#F6F7F9;border-radius:31px;height:640px;display:flex;flex-direction:column;overflow:hidden}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px;border-bottom:1px solid var(--line);background:#fff}
+.bar b{font-size:17px}
+.status{font-size:13px;color:var(--blue);font-weight:500}
+.status.off{color:var(--out)}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.empty{margin:auto;text-align:center;color:var(--muted);font-size:14px;max-width:26ch}
+.b{max-width:88%;padding:9px 13px;border-radius:18px;font-size:15px;word-wrap:break-word}
+.b.me{align-self:flex-end;background:var(--blue-soft);border-bottom-right-radius:5px}
+.b.mate{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px}
+.seg-p{border-bottom:2px solid var(--blue)}
+.seg-r{border-bottom:2px solid var(--out)}
+.tag{display:block;font-size:12px;font-weight:500;margin:0 0 3px;color:var(--blue)}
+.tag.web{color:var(--out)}
+.part+.part{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px 0;background:#F6F7F9}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font-size:12.5px;cursor:pointer;text-align:left}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.compose{display:flex;gap:8px;padding:10px 12px 8px;background:#F6F7F9}
+.compose input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:999px;padding:9px 14px;background:#fff}
+.icon{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--ink);background:#fff;cursor:pointer;display:grid;place-items:center;font-size:16px;flex:none}
+.icon[aria-pressed="true"]{background:var(--ink);color:#fff}
+.icon.go{background:var(--blue);border-color:var(--blue);color:#fff}
+.icon:disabled{opacity:.35;cursor:not-allowed}
+.note{font-size:11.5px;color:var(--muted);padding:0 14px 10px;background:#F6F7F9;line-height:1.35}
+
+/* inspector */
+.insp{display:flex;flex-direction:column;gap:0}
+.zone{background:var(--panel);border-radius:14px;padding:16px 18px}
+.zone h2{margin:0 0 10px;font-size:15px;font-weight:700}
+.zone.a{border-left:5px solid var(--blue)}
+.zone.c{border-left:5px solid var(--out)}
+.zone.c.none{border-left-color:var(--blue)}
+.boundary{display:flex;align-items:center;gap:12px;margin:10px 0;color:var(--muted);font-size:13px}
+.boundary::before,.boundary::after{content:"";flex:1;border-top:2px dashed var(--ink);opacity:.45}
+.boundary span{max-width:30ch;text-align:center}
+.clause{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.clause:first-of-type{border-top:0}
+.pill{font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.pill.p{background:var(--blue-soft);color:var(--blue)}
+.pill.r{background:var(--out-soft);color:var(--out)}
+.ctext{font-size:15px}
+.meter{grid-column:2;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.meter i{display:block;height:6px;border-radius:3px;background:var(--line);flex:1;position:relative;max-width:220px}
+.meter i s{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--out)}
+.tok-k{font-weight:700}
+.tok-f{color:var(--muted)}
+.tok-x{color:var(--out);text-decoration:line-through;text-decoration-thickness:2px}
+.payload{font-family:var(--mono);font-size:15px;background:var(--out-soft);border-radius:8px;padding:10px 12px;margin:6px 0;word-break:break-word}
+.keep{color:var(--blue);font-weight:500}
+.warn{background:var(--amber-soft);color:var(--amber);border-radius:8px;padding:8px 12px;font-size:13.5px;margin-top:8px}
+.legend{font-size:12.5px;color:var(--muted);margin-top:8px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.stat{background:var(--panel);border-radius:14px;padding:12px 16px}
+.stat b{display:block;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--muted)}
+.log{margin-top:14px;background:var(--panel);border-radius:14px;padding:14px 18px}
+.log h2{margin:0 0 8px;font-size:15px}
+.log ol{margin:0;padding:0;list-style:none;font-size:13.5px;max-height:190px;overflow:auto}
+.log li{display:flex;gap:10px;padding:5px 0;border-top:1px solid var(--line)}
+.log li:first-child{border-top:0}
+.log time{color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.log code{font-family:var(--mono);color:var(--out)}
+.log .loc{color:var(--blue)}
+details.test{margin-top:14px;background:var(--panel);border-radius:14px;padding:14px 18px}
+details.test summary{cursor:pointer;font-weight:700;font-size:15px}
+.acc{font-size:34px;font-weight:700;letter-spacing:-.02em}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin-top:8px}
+th,td{text-align:left;padding:5px 8px;border-top:1px solid var(--line);vertical-align:top}
+.scroll{overflow-x:auto}
+footer{margin-top:28px;font-size:13px;color:var(--muted);max-width:90ch}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>The phone keeps the feelings. The web gets only the question.</h1>
+      <p>Write something personal and something live in one message. The router splits it, answers the personal part on the phone, and shows exactly what would leave.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="air" aria-pressed="false">Airplane mode: off</button>
+      <button class="btn" id="speak" aria-pressed="false">Read replies aloud: off</button>
+      <button class="btn" id="reset">Clear chat</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section aria-label="Phone">
+      <div class="phone">
+        <div class="screen">
+          <div class="bar"><b>IQOO Mate</b><span class="status" id="status">On-device</span></div>
+          <div class="msgs" id="msgs" aria-live="polite"><p class="empty" id="empty">Try an example below, or type your own message.</p></div>
+          <div class="chips" id="chips"></div>
+          <div class="compose">
+            <button class="icon" id="mic" aria-pressed="false" aria-label="Voice input" title="Voice input">&#127908;</button>
+            <input id="inp" type="text" autocomplete="off" placeholder="Message IQOO Mate" aria-label="Message">
+            <button class="icon go" id="send" aria-label="Send">&#10148;</button>
+          </div>
+          <div class="note">Voice input here uses your browser's speech service, which may run in the cloud. The Android app is designed to use on-device Whisper instead.</div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-label="Router inspector">
+      <div class="insp">
+        <div class="zone a">
+          <h2>On the phone: what the router decided</h2>
+          <div id="clauses"><p class="legend" style="margin:0">Send a message to see how it is split and routed.</p></div>
+        </div>
+        <div class="boundary"><span>network boundary: only the box below can cross it</span></div>
+        <div class="zone c none" id="zc">
+          <h2>Leaves the phone</h2>
+          <div id="outbox"><p class="legend" style="margin:0">Nothing yet.</p></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><b id="s-req">0</b><span>requests sent to the web</span></div>
+        <div class="stat"><b id="s-bytes">0</b><span>bytes sent in total</span></div>
+        <div class="stat"><b id="s-local">0</b><span>message parts kept on device</span></div>
+      </div>
+
+      <div class="log"><h2>Network log</h2><ol id="log"><li><span class="legend" style="margin:0">Empty.</span></li></ol></div>
+
+      <details class="test" id="testbox">
+        <summary>Router accuracy test</summary>
+        <p class="legend">Runs the router on queries it was not trained on. Small test set written by the author, so treat the number as a smoke test, not a benchmark.</p>
+        <button class="btn" id="runtest">Run test</button>
+        <div id="testout"></div>
+      </details>
+    </section>
+  </div>
+
+  <footer>
+    <p><b>What is real here:</b> the clause splitting, the nearest-centroid router (TF-IDF in this web demo; MiniLM sentence embeddings in the Android app), the masking, and the byte counts. <b>What is simulated:</b> the local language model replies (canned, written for the demo) and the web results (placeholders). City names are kept in the outgoing query because the answer needs them.</p>
+  </footer>
+</div>
+
+<script id="core">
+//CORE-START
+const CSTOP=new Set("a an the is are was am be been to of in on at for with and or but so it its this that these those i me my mine you your we our they them he she his her do does did can could would should will please hey hi hello mate tell give show let know want need just really very about from as by if then than there here im ive".split(" "));
+const FILLER=new Set("a an the is are was am be been to of in on at for and or but so it its this that these those you your he she his her do does did can could would should will please hey hi hello mate tell give show let know want need just really very about with from as by if then than there here what how who when where why which any some ugh um uh yo ok okay right going get got like name call mail email phone".split(" "));
+const FIRST=new Set("i me my mine myself im ive id ill we our ours".split(" "));
+const EMO=new Set("sad lonely alone anxious nervous worried worry stressed stress angry happy excited scared afraid tired bored overwhelmed down low upset depressed guilty proud panicking panic awful miserable hurt hopeless frustrated jealous burned burnt unmotivated cry crying cried".split(" "));
+const TRAIN_P=["i feel sad today","i feel so lonely and have no one to talk to","i am anxious about my exam tomorrow","i had a fight with my best friend","i cant sleep because i keep overthinking","my parents do not understand me","i am stressed about my career","i feel like i am not good enough","i just need someone to talk to","i am so happy i got the job","how do i stop procrastinating","give me advice on how to study better","i miss my family so much","i feel nervous about speaking in front of people","i am bored and tired of everything","tell me a joke to cheer me up","how can i make new friends","i am angry at my brother","help me calm down i am panicking","i feel overwhelmed with college","what should i do when i feel low","i want to talk about my day","i feel proud of myself today","i am scared about the future","how do i deal with stress","i feel guilty about what i said to her","can you motivate me to focus","i am worried about my results","i feel left out by my classmates","i am excited about my trip"];
+const TRAIN_R=["what is the weather today","will it rain in chennai tomorrow","latest news headlines today","who won the cricket match yesterday","what is the current score of the match","gold price today","bitcoin price right now","traffic on the way to office now","stock market today nifty","when is the next train to hyderabad","live score of the ipl match","top news in india right now","what is the temperature outside","is the flight to delhi on time","petrol price today in my city","latest iphone release date","what time is sunset today","who is the current prime minister","exchange rate dollar to rupee today","movies playing near me this weekend","breaking news","todays headlines","how is the weather this weekend","results of the election","latest update on the new iqoo phone launch","what is trending on the internet now","open restaurants near me tonight","cricket score","current price of the stock","is it going to be hot today"];
+const TEST_P=["im feeling really down and nobody gets me","ive been crying all evening","how can i be more confident","i failed my test and feel awful","my friends ignored me today","i keep worrying about everything","can you cheer me up","i feel unmotivated to study","i am so excited today","im afraid i will disappoint my parents","i hate how lonely hostel life is","help me relax before the interview","i had a terrible day at work","what should i say to apologize to my friend","i feel burned out"];
+const TEST_R=["whats the forecast for tonight","any rain expected in bangalore","what are todays top headlines","who is winning the match right now","current gold rate","how much is a dollar in rupees","status of train 12627","latest news about the election","whats the traffic like right now","is it raining outside","nifty index today","newest iqoo phone launch news","showtimes for movies tonight","live cricket score please","sensex today"];
+
+function norm(s){return s.toLowerCase().replace(/[\u2019]/g,"'").replace(/\bwhats\b/g,"what").replace(/\btodays\b/g,"today").replace(/'s\b/g,"").replace(/'/g,"");}
+function toks(s){return norm(s).split(/[^a-z0-9]+/).filter(w=>w&&!CSTOP.has(w));}
+function vec(words,idf){const v={};for(const w of words){if(idf[w]!==undefined)v[w]=(v[w]||0)+idf[w];}return unit(v);}
+function unit(v){let n=0;for(const k in v)n+=v[k]*v[k];n=Math.sqrt(n);if(!n)return v;for(const k in v)v[k]/=n;return v;}
+function dot(a,b){let s=0;for(const k in a)if(b[k])s+=a[k]*b[k];return s;}
+const MODEL=(function(){
+  const docs=[...TRAIN_P.map(t=>[toks(t),0]),...TRAIN_R.map(t=>[toks(t),1])];
+  const df={};docs.forEach(([w])=>new Set(w).forEach(x=>df[x]=(df[x]||0)+1));
+  const N=docs.length,idf={};for(const w in df)idf[w]=Math.log((N+1)/(df[w]+1))+1;
+  const cent=[{},{}];
+  docs.forEach(([w,c])=>{const v=vec(w,idf);for(const k in v)cent[c][k]=(cent[c][k]||0)+v[k];});
+  return {idf,cent:[unit(cent[0]),unit(cent[1])]};
+})();
+function scoreClause(text){
+  const v=vec(toks(text),MODEL.idf);
+  const sP=dot(v,MODEL.cent[0]),sR=dot(v,MODEL.cent[1]);
+  const noSignal=(sP+sR)<0.05;
+  // privacy-safe default: no signal means it stays on the device
+  const label=(!noSignal&&sR>sP)?"realtime":"personal";
+  return {label,sP,sR,noSignal,pReal:noSignal?0:sR/(sP+sR)};
+}
+function splitClauses(t){
+  return t.replace(/[\u2019]/g,"'")
+    .split(/[,;!?\n]+|\.+(?=\s|$)|\s+(?:but|also|btw|anyway|and also|and then)\s+|\s+and\s+(?=(?:what|whats|what's|how|when|who|where|is|will|tell|show|any|can|give)\b)/i)
+    .map(s=>s&&s.trim()).filter(Boolean);
+}
+function cleanTok(w){return w.toLowerCase().replace(/[\u2019]/g,"'").replace(/'s$/,"").replace(/[^a-z0-9@]/g,"");}
+function classifyTokens(clause){
+  let s=clause.replace(/[\u2019]/g,"'").replace(/(\+?\d[\d -]{8,}\d)/g,m=>m.replace(/[ -]/g,""));
+  const names=new Set();
+  let m;const r1=/\b(?:[Mm]y name is|[Cc]all me|[Tt]his is)\s+([A-Z][a-z]+)/g;
+  while((m=r1.exec(s)))names.add(m[1].toLowerCase());
+  const r2=/\b(?:I am|I'm|Im)\s+([A-Z][a-z]+)/g;
+  while((m=r2.exec(s))){if(!EMO.has(m[1].toLowerCase()))names.add(m[1].toLowerCase());}
+  return s.split(/\s+/).filter(Boolean).map(raw=>{
+    const c=cleanTok(raw);
+    let kind;
+    if(!c)kind="filler";
+    else if(raw.includes("@")||/^\+?\d{10,}$/.test(raw.replace(/[^\d+]/g,""))&&/\d{10,}/.test(raw.replace(/\D/g,"")))kind="private";
+    else if(names.has(c)||FIRST.has(c)||EMO.has(c))kind="private";
+    else if(FILLER.has(c))kind="filler";
+    else kind="keep";
+    return {raw,clean:c,kind};
+  });
+}
+function route(text){
+  const segments=splitClauses(text).map(t=>{
+    const sc=scoreClause(t);
+    const seg={text:t,...sc,tokens:null,payload:"",feelings:false};
+    if(sc.label==="realtime"){
+      seg.tokens=classifyTokens(t);
+      seg.payload=seg.tokens.filter(x=>x.kind==="keep").map(x=>x.raw.replace(/^[^\w]+|[^\w]+$/g,"")).join(" ");
+      seg.feelings=seg.tokens.some(x=>x.kind==="private"&&EMO.has(x.clean));
+      if(!seg.payload){seg.label="personal";seg.tokens=null;}
+    }
+    return seg;
+  });
+  const priv=new Set();
+  segments.forEach(s=>{
+    if(s.label==="personal")toks(s.text).forEach(w=>priv.add(w));
+    else s.tokens.filter(x=>x.kind==="private").forEach(x=>priv.add(x.clean));
+  });
+  segments.forEach(s=>{
+    if(s.label==="realtime"){
+      s.shared=[...new Set(toks(s.payload))].filter(w=>priv.has(w));
+    }
+  });
+  return {segments};
+}
+function runRouterTest(){
+  const cases=[...TEST_P.map(q=>[q,"personal"]),...TEST_R.map(q=>[q,"realtime"])];
+  let ok=0;const misses=[];
+  cases.forEach(([q,exp])=>{const got=scoreClause(q).label;if(got===exp)ok++;else misses.push({q,exp,got});});
+  return {n:cases.length,ok,acc:ok/cases.length,misses,train:TRAIN_P.length+TRAIN_R.length};
+}
+//CORE-END
+</script>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;};
+const state={air:false,speak:false,req:0,bytes:0,local:0};
+const EX=["I feel lonely tonight","Will it rain in Chennai tomorrow?","My name is Ravi and I'm anxious about my exam, what's the latest news today?","ugh I'm so stressed what is the cricket score right now"];
+
+/* ---------- simulated local model ---------- */
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const REPLIES=[
+ [/\b(suicide|kill myself|end my life|want to die|hurt myself|self.?harm)\b/i,["I'm really glad you told me. You deserve support from a real person right now. In India you can call Tele-MANAS at 14416, and if you are in immediate danger, call 112. If someone you trust is nearby, please tell them too. I'm here with you."]],
+ [/\b(lonely|alone|no friends|left out|no one to talk|nobody)\b/i,["That sounds heavy. Feeling alone hurts, and I'm glad you said it out loud. I'm here and I'm listening. What made tonight feel the loneliest?","I'm here with you. Loneliness often shows up most when the day goes quiet. Do you want to talk about it, or would a small plan, like messaging one person, help?"]],
+ [/\b(sad|down|low|cry|crying|cried|depressed|hopeless|miserable|awful|hurt)\b/i,["I'm sorry it feels this way. You don't have to fix it right now. Do you want to tell me what happened, or just sit with it for a minute?","That sounds really painful. I'm listening. What's been weighing on you the most today?"]],
+ [/\b(anxious|nervous|worried|worry|scared|afraid|panic|panicking|exam|interview|overthinking)\b/i,["That sounds stressful. Try one slow breath in for four, out for six, then tell me the one thing that worries you most. We can break it into small steps.","It makes sense to feel on edge before something that matters. Let's split it up: what's the first small thing you can do in the next ten minutes?"]],
+ [/\b(stress|stressed|overwhelmed|burned|burnt|tired|bored|unmotivated|procrastinat)\w*/i,["That's a lot to carry. Let's pick just one task and do five focused minutes on it. Which one feels smallest?","Being worn out is a signal, not a failure. What would a short break look like for you right now?"]],
+ [/\b(angry|frustrated|fight|upset|jealous|guilty)\b/i,["That sounds really frustrating. Want to vent first, or think through what to say next?","Strong feelings usually point at something that matters to you. What happened?"]],
+ [/\b(happy|excited|proud|got the job|great|good news)\b/i,["That's wonderful, I'm happy for you! What part of it feels best right now?"]],
+ [/\b(joke|cheer)\b/i,["Why did the phone go to therapy? It had too many unresolved notifications. Better? Tell me what's going on if you'd like."]],
+ [/\b(advice|how do i|how can i|should i|study|focus|confident|sleep)\b/i,["Happy to think it through with you. Tell me a bit more about your situation, and we'll pick one small thing to try today."]]
+];
+function localReply(t){for(const [re,out] of REPLIES)if(re.test(t))return pick(out);return pick(["I'm here. Tell me a bit more about what's going on.","I'm listening. What's on your mind?"]);}
+function webResult(seg){
+  const p=seg.payload.toLowerCase();
+  const m=seg.text.match(/\b(?:in|at|for)\s+([A-Z][A-Za-z]+(?:\s[A-Z][A-Za-z]+)?)/);const loc=m?m[1]:"your area";
+  if(/weather|rain|temperature|forecast|hot|raining|sunset/.test(p))return loc+": 31\u00B0C, humid, a chance of an evening shower.";
+  if(/news|headline|breaking|trending/.test(p))return "Placeholder headlines: 1) Local news item  2) Sports update  3) Technology update.";
+  if(/cricket|score|match|ipl/.test(p))return "Placeholder score card: Team A 182/6 (20 ov), Team B 176/8 (20 ov).";
+  if(/gold|price|bitcoin|petrol|stock|nifty|sensex|dollar|rate|exchange/.test(p))return "Placeholder price: 0.00 (a real build would call a market-data API here).";
+  return "Placeholder web result for \u201C"+seg.payload+"\u201D.";
+}
+
+/* ---------- UI helpers ---------- */
+const msgs=$("msgs");
+function scroll(){msgs.scrollTop=msgs.scrollHeight;}
+function now(){return new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});}
+function bytes(s){return new TextEncoder().encode(s).length;}
+function say(t){if(!state.speak||!window.speechSynthesis)return;speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(t));}
+function typeInto(node,text,done){
+  const w=text.split(" ");let i=0;node.textContent="";
+  (function step(){node.textContent=w.slice(0,++i).join(" ");scroll();if(i<w.length)setTimeout(step,28);else done&&done();})();
+}
+function setLog(entries){
+  const ol=$("log");ol.textContent="";
+  if(!entries.length){const li=el("li");li.appendChild(el("span","legend","Empty."));ol.appendChild(li);return;}
+  entries.slice().reverse().forEach(e=>{
+    const li=el("li");li.appendChild(el("time",null,e.t));
+    const d=el("div");
+    if(e.q){d.appendChild(el("code",null,e.q));d.appendChild(el("span",null," \u2192 web ("+e.b+" bytes)"));}
+    else{d.appendChild(el("span","loc",e.note));}
+    li.appendChild(d);ol.appendChild(li);
+  });
+}
+const LOG=[];
+function stats(){$("s-req").textContent=state.req;$("s-bytes").textContent=state.bytes;$("s-local").textContent=state.local;}
+
+function renderInspector(a){
+  const c=$("clauses");c.textContent="";
+  a.segments.forEach(s=>{
+    const row=el("div","clause");
+    row.appendChild(el("span","pill "+(s.label==="personal"?"p":"r"),s.label==="personal"?"stays":"masked"));
+    const t=el("div","ctext");
+    if(s.tokens){s.tokens.forEach((x,i)=>{t.appendChild(el("span","tok-"+(x.kind==="keep"?"k":x.kind==="filler"?"f":"x"),x.raw));if(i<s.tokens.length-1)t.appendChild(document.createTextNode(" "));});}
+    else t.textContent=s.text;
+    row.appendChild(t);
+    const m=el("div","meter");
+    m.appendChild(document.createTextNode(s.noSignal?"no signal, so it defaults to staying on the phone":"real-time score"));
+    if(!s.noSignal){const bar=el("i");const f=el("s");f.style.width=Math.round(s.pReal*100)+"%";bar.appendChild(f);m.appendChild(bar);m.appendChild(document.createTextNode(Math.round(s.pReal*100)+"%"));}
+    row.appendChild(m);c.appendChild(row);
+  });
+  if(a.segments.some(s=>s.tokens)){
+    const lg=el("p","legend");lg.appendChild(el("span","tok-k","kept"));lg.appendChild(document.createTextNode(" goes in the query \u00B7 "));
+    lg.appendChild(el("span","tok-f","filler"));lg.appendChild(document.createTextNode(" is dropped \u00B7 "));
+    lg.appendChild(el("span","tok-x","struck"));lg.appendChild(document.createTextNode(" is identity or feeling and never leaves"));
+    c.appendChild(lg);
+  }
+  const o=$("outbox"),zc=$("zc");o.textContent="";
+  const reals=a.segments.filter(s=>s.label==="realtime");
+  if(!reals.length||state.air){
+    zc.classList.add("none");
+    o.appendChild(el("p",null,state.air&&reals.length?"Nothing left the phone. Airplane mode blocked the request.":"Nothing left the phone."));
+    if(state.air&&reals.length)o.appendChild(el("p","legend","Queued locally: "+reals.map(s=>"\u201C"+s.payload+"\u201D").join(", ")));
+  }else{
+    zc.classList.remove("none");
+    reals.forEach(s=>{
+      o.appendChild(el("div","payload",s.payload));
+      if(s.shared&&s.shared.length)o.appendChild(el("div","warn","Also appears in your private text: "+s.shared.join(", ")+". Needed for the answer, so it is sent."));
+    });
+    o.appendChild(el("p","legend","Everything from the personal part of your message stays out of this box."));
+  }
+}
+
+function addMe(a){
+  $("empty")&&$("empty").remove();
+  const b=el("div","b me");
+  a.segments.forEach((s,i)=>{b.appendChild(el("span",s.label==="personal"?"seg-p":"seg-r",s.text));if(i<a.segments.length-1)b.appendChild(document.createTextNode(" "));});
+  msgs.appendChild(b);scroll();
+}
+function send(text){
+  text=text.trim();if(!text)return;
+  const a=route(text);
+  addMe(a);renderInspector(a);
+  const personalText=a.segments.filter(s=>s.label==="personal"||s.feelings).map(s=>s.text).join(". ");
+  const reals=a.segments.filter(s=>s.label==="realtime");
+  const bub=el("div","b mate");msgs.appendChild(bub);
+  let spoken="";
+  function addWeb(){
+    reals.forEach(s=>{
+      const part=el("div","part");
+      if(state.air){
+        part.appendChild(el("span","tag web","no connection"));
+        part.appendChild(el("div",null,"You're in airplane mode, so I can't look that up. I've kept \u201C"+s.payload+"\u201D for when you're back online."));
+        LOG.push({t:now(),note:"Blocked by airplane mode: \u201C"+s.payload+"\u201D (nothing sent)"});
+      }else{
+        const n=bytes(s.payload);state.req++;state.bytes+=n;
+        LOG.push({t:now(),q:s.payload,b:n});
+        part.appendChild(el("span","tag web","from the web \u00B7 simulated \u00B7 sent only: \u201C"+s.payload+"\u201D"));
+        part.appendChild(el("div",null,webResult(s)));
+        spoken+=" "+webResult(s);
+      }
+      bub.appendChild(part);
+    });
+    setLog(LOG);stats();scroll();say(spoken.trim());
+  }
+  function afterLocal(){reals.length?setTimeout(addWeb,state.air?150:650):(setLog(LOG),stats(),say(spoken.trim()));}
+  if(personalText){
+    state.local+=a.segments.filter(s=>s.label==="personal"||s.feelings).length;
+    LOG.push({t:now(),note:"Personal text handled on device (0 bytes sent)"});
+    const part=el("div","part");part.appendChild(el("span","tag","on device \u00B7 simulated model"));
+    const body=el("div");part.appendChild(body);bub.appendChild(part);
+    const r=localReply(personalText);spoken=r;
+    typeInto(body,r,afterLocal);
+  }else{afterLocal();}
+}
+
+/* ---------- wiring ---------- */
+$("send").onclick=()=>{const v=$("inp").value;$("inp").value="";send(v);};
+$("inp").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("send").click();}});
+const chips=$("chips");EX.forEach(t=>{const b=el("button","chip",t);b.onclick=()=>send(t);chips.appendChild(b);});
+$("air").onclick=()=>{state.air=!state.air;$("air").setAttribute("aria-pressed",state.air);$("air").textContent="Airplane mode: "+(state.air?"on":"off");const s=$("status");s.textContent=state.air?"Airplane mode":"On-device";s.classList.toggle("off",state.air);};
+$("speak").onclick=()=>{state.speak=!state.speak;$("speak").setAttribute("aria-pressed",state.speak);$("speak").textContent="Read replies aloud: "+(state.speak?"on":"off");if(!state.speak&&window.speechSynthesis)speechSynthesis.cancel();};
+$("reset").onclick=()=>{msgs.textContent="";const e=el("p","empty","Try an example below, or type your own message.");e.id="empty";msgs.appendChild(e);$("clauses").innerHTML='<p class="legend" style="margin:0">Send a message to see how it is split and routed.</p>';$("outbox").innerHTML='<p class="legend" style="margin:0">Nothing yet.</p>';$("zc").classList.add("none");LOG.length=0;state.req=state.bytes=state.local=0;setLog(LOG);stats();if(window.speechSynthesis)speechSynthesis.cancel();};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){$("mic").disabled=true;$("mic").title="Voice input is not supported in this browser";}
+else{let rec=null;$("mic").onclick=()=>{
+  if(rec){rec.stop();return;}
+  rec=new SR();rec.lang="en-IN";rec.interimResults=false;
+  rec.onstart=()=>$("mic").setAttribute("aria-pressed","true");
+  rec.onresult=e=>{$("inp").value=e.results[0][0].transcript;};
+  rec.onend=()=>{$("mic").setAttribute("aria-pressed","false");rec=null;if($("inp").value)$("send").click();};
+  rec.onerror=()=>{};rec.start();};}
+$("runtest").onclick=()=>{
+  const r=runRouterTest();const o=$("testout");o.textContent="";
+  o.appendChild(el("div","acc",Math.round(r.acc*100)+"%"));
+  o.appendChild(el("p","legend",r.ok+" of "+r.n+" held-out queries routed correctly. Trained on "+r.train+" example phrases."));
+  if(r.misses.length){const w=el("div","scroll");const t=el("table");const h=el("tr");["Query","Expected","Got"].forEach(x=>h.appendChild(el("th",null,x)));t.appendChild(h);
+    r.misses.forEach(m=>{const tr=el("tr");[m.q,m.exp,m.got].forEach(x=>tr.appendChild(el("td",null,x)));t.appendChild(tr);});w.appendChild(t);o.appendChild(w);}
+};
+})();
+</script>
+</body>
+</html>
